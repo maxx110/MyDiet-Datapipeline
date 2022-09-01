@@ -70,7 +70,7 @@ class scrapper(Migration):
         super().con_database()  #establish connecction to databse
         super().create_schema() #creates a schema for database
         super().create_table()  #creates a table if not exists
-        super().est_conn(data_frame) #loads dataframe to postgres database
+        super().est_conn(data_frame) #loads dataframe to postgres databases
         
         
 
