@@ -1,5 +1,6 @@
 from ast import Return
 from distutils.log import error
+from io import StringIO
 import psycopg2
 import pymysql
 from sqlalchemy import create_engine
@@ -11,49 +12,47 @@ class Migration:
         self.host = 'Localhost'
         self.port = 5432
         self.user = 'postgres'
-        self.passwd = '@Job7mupps5'
+        self.passwd = 'dance'
         self.database = 'postgres'
         self.conn = psycopg2.connect(host=self.host, dbname=self.database, user=self.user, password=self.passwd, port=self.port)
-
-    @staticmethod
-    def insert_df(df,table='mydiett_information'):
-        host = 'Localhost'
-        port = 5432
-        user = 'postgres'
-        passwd = '@Job7mupps5'
-        database = 'postgres'
-        conn = psycopg2.connect(host=host, dbname=database, user=user, password=passwd, port=port)
-
-        if len(df)>0:
-            
-            df_columns = list(df)
-            #create (col1,col2...)
-            columns = ','.join(df_columns)
-            #create values per column
-            values = 'VALUES({})'.format(','.join(['%s' for _ in df_columns]))
-            #create insert into table column and values
-            insert_statement = 'INSERT INTO {} ({}) {}'.format(table,columns,values)
-            cur = conn.cursor()
-            #cur.execute('truncate' + table + ';') #avoids duplicate           
-            psycopg2.extras.execute_batch(cur,insert_statement,df.values)
-            conn.commit()
-
-    # def get_dataframe(self):
-    #     dataframe = scrapper.data_frame
-    #     print(dataframe)
-    
-    def print_inf(self,z,u):
-        return print(z+u)
+        self.conn_string = "postgresql://postgres:dance@Localhost/postgres"
+        
+    def est_conn(self,data_frame):
+        """
+        loads data_frame into the postgres databse
+        """
+        try:
+            db = create_engine(self.conn_string)
+            conn = db.connect()
+            conn1 = psycopg2.connect(
+            database="postgres",
+            user='postgres', 
+            password='dance', 
+            host='127.0.0.1', 
+            port= '5432'
+            )
+            conn1.autocommit = True
+            cur = conn1.cursor()
+            # converting data to sql
+            data_frame.to_sql('mydiett_information', conn, if_exists= 'replace', index=False)
+            conn1.close()
+        except:
+            print('data not loaded to postgress')
 
     def create_schema(self):
+        """
+        creates a schema for the database
+        """
         cur = self.conn.cursor()
         query ='CREATE SCHEMA IF NOT EXISTS mydiett'
         #params = ('mydiett','postgres')
         cur.execute(query)
-        #self.conn.commit()
-    
-    
+        self.conn.commit()
+        
     def create_table(self):
+        """
+        creates a table for the database if it exists
+        """
         cur =self.conn.cursor()
         try:
             create_table_command = """
@@ -68,6 +67,8 @@ class Migration:
                         )
             """
             cur.execute(create_table_command)
+            self.conn.commit()
+            #cur.close()
             
         except:
             print('table not created successfully')
@@ -79,30 +80,18 @@ class Migration:
         cur.execute(query)
         #result = cur.fetchall()
         
-
-
     def con_database(self):
-        # self.conn = None
-        # #cur = None
+        """
+        establishes a connecction to the database
+        """
         try:
             cur = self.conn.cursor()
-            self.create_schema()
-            self.create_table()
-            
             self.conn.commit()
-            cur.close()
-            #self.conn.close()
+
         except Exception as error:
             print(error)
-        finally:
-            # if cur is not None:
-            #     cur.close()
-            if self.conn is not None:
-                self.conn.close()
-        
-
+    
 conne= Migration()
 conne.con_database()
     
     
-
