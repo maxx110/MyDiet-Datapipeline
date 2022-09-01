@@ -16,8 +16,8 @@ import connection
 import psycopg2
 import psycopg2.extras as extras
 import pandas as pd
-import connection
 from connection import Migration
+#from die import send
 
 
 
@@ -26,14 +26,16 @@ from connection import Migration
 
 
 
-class scrapper():
+class scrapper(Migration):
 
     def __init__(self):
+        super().__init__()
         self.driver =webdriver.Edge()
         self.url = 'https://www.myprotein.com/'
         self.data = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [], \
         'Product_Link': [], 'Product_img': [],'Product_description': []}
         self.img = []
+        
         
         #self.uid = uuid.uuid4()
 
@@ -65,26 +67,12 @@ class scrapper():
     def convert_to_dataframe(self):
         df = pd.DataFrame.from_dict(self.data, orient='index')
         data_frame = df.transpose()
-        #Migration.create_table(self)
-        print(data_frame)
-        # Migration.con_database()
-        # Migration.insert_df(data_frame)
-        return data_frame
-
-    # def insert_df(df,table,cur):
-    #     if len(df)>0:
-    #         df_columns = list(df)
-    #         #create (col1,col2...)
-    #         columns = ','.join(df_columns)
-    #         #create values per column
-    #         values = 'VALUES({})'.format(','.join(['%s' for _ in df_columns]))
-    #         #create insert into table column and values
-    #         insert_statement = 'INSERT INTO {} ({}) {}'.format(table,columns,values)
-    #         cur.execute('truncate' + table + ';') #avoids duplicate
-    #         cur = conn.cursor()
-    #         psycopg2.extras.execute_batch(cur,insert_statement,df.values)
-    #     conn.commit()
-    
+        super().con_database()  #establish connecction to databse
+        super().create_schema() #creates a schema for database
+        super().create_table()  #creates a table if not exists
+        super().est_conn(data_frame) #loads dataframe to postgres database
+        
+        
 
     # def upload_s3_bucket(self,s3_filename,stored_name):
     #     """
@@ -293,6 +281,7 @@ if __name__ == '__main__':
     else:
         pass
     data=scrapper()
-    data.test()    
+    data.test()  
+    
 
 
