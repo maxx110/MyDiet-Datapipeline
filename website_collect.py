@@ -65,73 +65,17 @@ class scrapper(Migration):
         locate_view_all.click()
 
     
-<<<<<<< HEAD
     def convert_to_dataframe(self):
+        """
+        convert dictionary to dataframe 
+        and upload to rds table
+        """
         df = pd.DataFrame.from_dict(self.data, orient='index')
         data_frame = df.transpose()
         super().con_database()  #establish connecction to databse
         super().create_schema() #creates a schema for database
         super().create_table()  #creates a table if not exists
-        super().est_conn(data_frame) #loads dataframe to postgres databases
-        
-        
-
-    # def upload_s3_bucket(self,s3_filename,stored_name):
-    #     """
-    #     uploads files into s3 bucket
-    #     """
-    #     bucket_name = 'aicorbuc'
-    #     s3 = boto3.client('s3')
-    #     s3.put_object(Body=json.dumps(s3_filename),Bucket=bucket_name,Key= f'website_data/{stored_name}')
-        
-
-
-    # def get_all_buck():
-    #     """
-    #     lists all buckets in s3
-    #     """
-    #     s3_obj = boto3.resource('s3')
-    #     for elements in s3_obj.buckets.all():
-    #         print(elements.name)
-        
-    # def uploadDirectory(self):
-    #     s3= boto3.client('s3')
-    #     bucket_name = 'aicorbuc'
-    #     files = glob.glob('C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images\\*')
-        
-    #     for file in files:
-    #         file_name = file.split('-')[-1]
-    #         s3.upload_file(file,bucket_name,f'website_data/images/{file_name}')
-
-           
-
-
-
-    # def download_img(self):
-    #     path3 = 'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data'
-    #     os.chdir(path3)
-    #     image_path = 'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images'
-        
-    #     if not os.path.exists(path3):
-    #         os.makedirs(image_path) 
-    #     else:
-    #         pass
-
-    #     #path4 = 'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images'
-    #     # os.chdir(path4)
-    #     # for i in self.img:
-    #     #     #lnum = len(self.img)
-    #     #     #filename = i.split('-'[-1])
-    #     #     urllib.request.urlretrieve(i,f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images\\a.jpg')
-=======
-    # def convert_to_dataframe(self):
-    #     df = pd.DataFrame.from_dict(self.data, orient='index')
-    #     data_frame = df.transpose()
-    #     super().con_database()  #establish connecction to databse
-    #     super().create_schema() #creates a schema for database
-    #     super().create_table()  #creates a table if not exists
-    #     super().est_conn(data_frame) #loads dataframe to postgres database
->>>>>>> another_development
+        super().est_conn(data_frame) #loads dataframe to postgres database
 
         
     def uploadDirectory(self):
