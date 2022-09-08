@@ -39,6 +39,32 @@ class Migration:
         except:
             print('data not loaded to postgress')
 
+    def insert_into_database_noduplicate(self,Product_Id, Product_Name,Product_Link,Product_img):
+        db = create_engine(self.conn_string)
+        conn = db.connect()
+        conn1 = psycopg2.connect(
+        database="postgres",
+        user='postgres', 
+        password='dance', 
+        host='127.0.0.1', 
+        port= '5432'
+        
+        )
+        conn1.autocommit = True
+        cur = conn1.cursor()
+        cur.execute("SELECT \"Product_Id\" FROM mydiett_information WHERE \"Product_Id\"=%s",[Product_Id])
+          
+            
+        result = cur.fetchall()
+        if result:
+            print('Record already exist')
+            # Record already exists
+            # Do something that tells the user that email/user handle already exists
+            
+        else:
+            cur.execute("INSERT INTO mydiett_information (\"Product_Id\", \"Product_Name\", \"Product_Link\", \"Product_img\") VALUES (%s, %s, %s, %s)", [Product_Id, Product_Name, Product_Link, Product_img ])
+            conn1.commit()
+
     def create_schema(self):
         """
         creates a schema for the database
