@@ -7,6 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait as Wait
+from selenium.webdriver.chrome.options import Options
 from msedge.selenium_tools import EdgeOptions
 import uuid
 import json
@@ -32,13 +33,13 @@ class scrapper(Migration):
 
     def __init__(self):
         super().__init__()
-        Options = EdgeOptions()
-        Options.use_chromium = True
-        Options.add_argument("--headless")
-        Options.add_argument("disable-gpu")
-        Options.add_argument('--allow-running-insecure-content')
-        Options.add_argument('--ignore-certificate-errors')
-        self.driver =webdriver.Chrome(executable_path="msedgedriver.exe", options=Options)
+        COptions = Options()
+        COptions.use_chromium = True
+        COptions.add_argument("--headless")
+        COptions.add_argument("disable-gpu")
+        COptions.add_argument('--allow-running-insecure-content')
+        COptions.add_argument('--ignore-certificate-errors')
+        self.driver =webdriver.Chrome(executable_path="./chromedriver",options=COptions)
         self.url = 'https://www.myprotein.com/'
         self.data = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [], \
         'Product_Link': [], 'Product_img': [],'Product_description': []}
@@ -73,17 +74,13 @@ class scrapper(Migration):
         locate_view_all.click()
 
     
-    def convert_to_dataframe(self):
-        """
-        convert dictionary to dataframe 
-        and upload to rds table
-        """
-        df = pd.DataFrame.from_dict(self.data, orient='index')
-        data_frame = df.transpose()
-        super().con_database()  #establish connecction to databse
-        super().create_schema() #creates a schema for database
-        super().create_table()  #creates a table if not exists
-        super().est_conn(data_frame) #loads dataframe to postgres database
+    # def convert_to_dataframe(self):
+    #     df = pd.DataFrame.from_dict(self.data, orient='index')
+    #     data_frame = df.transpose()
+    #     super().con_database()  #establish connecction to databse
+    #     super().create_schema() #creates a schema for database
+    #     super().create_table()  #creates a table if not exists
+    #     super().est_conn(data_frame) #loads dataframe to postgres database
 
     def dump_raw_data_to_s3(self,raw_datas):
         # dump each as a json file into an s3 bucket

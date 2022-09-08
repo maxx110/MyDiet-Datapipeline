@@ -65,7 +65,6 @@ class Migration:
             cur.execute("INSERT INTO mydiett_information (\"Product_Id\", \"Product_Name\", \"Product_Link\", \"Product_img\") VALUES (%s, %s, %s, %s)", [Product_Id, Product_Name, Product_Link, Product_img ])
             conn1.commit()
 
-
     def create_schema(self):
         """
         creates a schema for the database
