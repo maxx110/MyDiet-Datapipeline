@@ -7,6 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait as Wait
+from msedge.selenium_tools import EdgeOptions
 import uuid
 import json
 import urllib.request
@@ -31,11 +32,18 @@ class scrapper(Migration):
 
     def __init__(self):
         super().__init__()
-        self.driver =webdriver.Edge()
+        Options = EdgeOptions()
+        Options.use_chromium = True
+        Options.add_argument("--headless")
+        Options.add_argument("disable-gpu")
+        Options.add_argument('--allow-running-insecure-content')
+        Options.add_argument('--ignore-certificate-errors')
+        self.driver =webdriver.Chrome(executable_path="msedgedriver.exe", options=Options)
         self.url = 'https://www.myprotein.com/'
         self.data = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [], \
         'Product_Link': [], 'Product_img': [],'Product_description': []}
         self.img = []
+        self.rescrape_tag = False
         
         
         #self.uid = uuid.uuid4()
@@ -73,18 +81,44 @@ class scrapper(Migration):
     #     super().create_table()  #creates a table if not exists
     #     super().est_conn(data_frame) #loads dataframe to postgres database
 
-        
+    def dump_raw_data_to_s3(self,raw_datas):
+        # dump each as a json file into an s3 bucket
+        bucket_name = 'aicorbuc'
+        s3 = boto3.client('s3')
+        data = json.dumps(raw_datas)
+        s3.put_object(Body=json.dumps(data),Bucket=bucket_name,Key= f'website_data/{product_unik}')
+
+
+
     def uploadDirectory(self):
         """
         upload the downloaded image into the required s3_bucket 
         """
-        s3= boto3.client('s3')
-        bucket_name = 'aicorbuc'
-        files = glob.glob('C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images\\*')
-        
-        for file in files:
-            file_name = file.split('-')[-1]
-            s3.upload_file(file,bucket_name,f'website_data/images/{file_name}')
+        try:
+            s3= boto3.client('s3')
+            bucket_name = 'aicorbuc'
+            files_in_image_folder = glob.glob('C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images\\*')
+            
+            for file in files_in_image_folder:
+                file_name = file.split('-')[-1]
+                s3.upload_file(file,bucket_name,f'website_data/images/{file_name}')
+        except:
+            print('image upload to s3 failed')
+
+    def avoid_rescrap(self,prd_unik):    
+        raw_folder_path = 'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data'
+        for root_folder,sub_folder,files in os.walk(raw_folder_path):
+            for file in files:
+                if file == prd_unik:
+                    self.rescrape_tag = True
+                    break
+                else:
+                    pass
+        return self.rescrape_tag
+                
+                
+
+       
 
  
     def download_img(self):
@@ -97,42 +131,44 @@ class scrapper(Migration):
         
 
         #get all images
-        all_product = self.driver.find_elements(by=By.XPATH, value="//li[contains(@class,'productListProducts_product')]")
+        product_lists = self.driver.find_elements(by=By.XPATH, value="//li[contains(@class,'productListProducts_product')]")
         bucket_name = 'aicorbuc'
         s3 = boto3.client('s3')
         answer = input('Do you want to upload to s3: Yes/No')
-        
-        for i in all_product:
-            
-            if not os.path.exists(image_path):
-                os.makedirs(image_path) 
-            img = i.find_element(By.XPATH, ".//div[@class='athenaProductBlock_imageContainer']")
-            a_tag = img.find_elements(By.TAG_NAME,'img')
-            #print(a_tag)
-            for i in a_tag:
-                prd_img= i.get_attribute('src')
-                #print(prd_img)
-                img_name = prd_img.split('/')[-1]
-                try:
-                    urllib.request.urlretrieve(prd_img, f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images\\{img_name}.jpg')
-                except:
-                    urllib.request.urlretrieve(prd_img, f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images\\{img_name}.png')
-                # upload images into s3 bucket
-            if answer == 'yes':
-                self.uploadDirectory()
-            else:
-                pass
+        try:
+            for product in product_lists:
+                
+                if not os.path.exists(image_path):
+                    os.makedirs(image_path) 
+                img = product.find_element(By.XPATH, ".//div[@class='athenaProductBlock_imageContainer']")
+                a_tags = img.find_elements(By.TAG_NAME,'img')
+                #print(a_tag)
+                for each_a_tag in a_tags:
+                    prd_img= each_a_tag.get_attribute('src')
+                    #print(prd_img)
+                    img_name = prd_img.split('/')[-1]
+                    try:
+                        urllib.request.urlretrieve(prd_img, f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images\\{img_name}.jpg')
+                    except:
+                        urllib.request.urlretrieve(prd_img, f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images\\{img_name}.png')
+                    # upload images into s3 bucket
+                if answer == 'yes':
+                    self.uploadDirectory()
+                else:
+                    pass
+        except:
+            print('image download from site failed')
 
 
     def get_all_product(self):
         """
         scrape all required data from the site
         """
-    
+        
         all_product = self.driver.find_elements(by=By.XPATH, value="(//li[contains(@class,'productListProducts_product')])")
         
         for products in all_product:
-            
+            status = False
             #gets the product title and return only the text
             product_title= products.find_element(By.XPATH, ".//h3[@class='athenaProductBlock_productName']").text
             
@@ -171,7 +207,8 @@ class scrapper(Migration):
             
             raw_datas = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [], \
             'Product_Link': [], 'Product_img': [],'Product_description': []}
-
+            #self.avoid_rescrap(product_unik)
+            #if status == False:
             # APPEND VARIOUS RETRIEVAL TO ITS RESPECTIVE DICTIONARY
             self.data['Unique_Id'].append(UniqueId)
             self.data['Product_Id'].append(product_unik)
@@ -179,7 +216,7 @@ class scrapper(Migration):
             #self.data['Product_Price'].append(product_price)
             self.data['Product_Link'].append(product_link)
             self.data['Product_img'].append(product_img)
-           # self.data['Product_description'].append(product_text)
+            # self.data['Product_description'].append(product_text)
 
             raw_datas['Unique_Id'].append(UniqueId)
             raw_datas['Product_Id'].append(product_unik)
@@ -189,20 +226,35 @@ class scrapper(Migration):
             raw_datas['Product_img'].append(product_img)
             # #raw_datas['Product_description'].append(product_text)
             
-            #create a folder path and name foe each product
-            product_unik_path = f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\{product_unik}'
-            make_folder(product_unik_path)
-            os.chdir(product_unik_path)
-            # dump each as json file with data.json as file name
-            with open('data.json', 'a') as f:
-                json.dump(raw_datas, f)
-            # dump each as a json file into an s3 bucket
-            bucket_name = 'aicorbuc'
-            s3 = boto3.client('s3')
-            data = json.dumps(raw_datas)
-            s3.put_object(Body=json.dumps(data),Bucket=bucket_name,Key= f'website_data/{product_unik}')
+            #ths insert the data into the database if it doesn't already exist
+            #super().insert_into_database_noduplicate(product_unik,product_title,product_link,product_img)
 
-            raw_datas.clear()
+            # folder_product_unik = str(product_unik)
+
+            # self.avoid_rescrap(folder_product_unik)
+            # if self.rescrape_tag == False:
+            #     #create a folder path and name for each product
+            #     product_unik_path = f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\{product_unik}'
+            #     make_folder(product_unik_path)
+            #     os.chdir(product_unik_path)
+            #     # dump each as json file with data.json as file name
+            #     with open('data.json', 'a') as f:
+            #         json.dump(raw_datas, f)
+            # else:
+            #     print('value already exist so skipping')
+            #     pass
+            
+            #self.dump_raw_data_to_s3(raw_datas)
+            # # dump each as a json file into an s3 bucket
+            # bucket_name = 'aicorbuc'
+            # s3 = boto3.client('s3')
+            # data = json.dumps(raw_datas)
+            # s3.put_object(Body=json.dumps(data),Bucket=bucket_name,Key= f'website_data/{product_unik}')
+
+           #raw_datas.clear()
+            # else:
+            #     pass
+            
 
   
 
@@ -218,10 +270,12 @@ class scrapper(Migration):
         self.driver.implicitly_wait(20)
         # sleep(5)
         self.get_all_product()
-        sleep(5)
+        #print(self.data)
+        # sleep(5)
         #self.download_img()
+        #self.convert_to_dataframe()
         #s3_functions.download_image_locally(self)
-        sleep(5)
+        # sleep(5)
        
         
 
