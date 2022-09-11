@@ -9,13 +9,13 @@ import psycopg2.extras as extras
 
 class Migration:
     def __init__(self):
-        self.host = 'Localhost'
-        self.port = 5432
-        self.user = 'postgres'
-        self.passwd = 'dance'
+        self.host = 'Localhost' 
+        self.port = '5438'
+        self.user = 'max'
+        self.passwd = 'max1'
         self.database = 'postgres'
         self.conn = psycopg2.connect(host=self.host, dbname=self.database, user=self.user, password=self.passwd, port=self.port)
-        self.conn_string = "postgresql://postgres:dance@Localhost/postgres"
+        self.conn_string = "postgresql://postgres:max1@localhost/max"
         
     def est_conn(self,data_frame):
         """
@@ -26,10 +26,10 @@ class Migration:
             conn = db.connect()
             conn1 = psycopg2.connect(
             database="postgres",
-            user='postgres', 
-            password='dance', 
-            host='127.0.0.1', 
-            port= '5432'
+            user='max', 
+            password='max1', 
+            host= 'Localhost',
+            port= '5438'
             )
             conn1.autocommit = True
             cur = conn1.cursor()
@@ -44,10 +44,10 @@ class Migration:
         conn = db.connect()
         conn1 = psycopg2.connect(
         database="postgres",
-        user='postgres', 
-        password='dance', 
-        host='127.0.0.1', 
-        port= '5432'
+        user='max', 
+        password='max1', 
+        host= 'Localhost',    
+        port= '5438'
         
         )
         conn1.autocommit = True
@@ -64,6 +64,8 @@ class Migration:
         else:
             cur.execute("INSERT INTO mydiett_information (\"Product_Id\", \"Product_Name\", \"Product_Link\", \"Product_img\") VALUES (%s, %s, %s, %s)", [Product_Id, Product_Name, Product_Link, Product_img ])
             conn1.commit()
+        cur.close()
+        conn1.close()
 
     def create_schema(self):
         """
@@ -74,6 +76,7 @@ class Migration:
         #params = ('mydiett','postgres')
         cur.execute(query)
         self.conn.commit()
+        
         
     def create_table(self):
         """

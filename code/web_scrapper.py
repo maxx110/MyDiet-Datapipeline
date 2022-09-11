@@ -82,7 +82,7 @@ class scrapper(Migration):
     #     super().create_table()  #creates a table if not exists
     #     super().est_conn(data_frame) #loads dataframe to postgres database
 
-    def dump_raw_data_to_s3(self,raw_datas):
+    def dump_raw_data_to_s3(self,raw_datas,product_unik):
         # dump each as a json file into an s3 bucket
         bucket_name = 'aicorbuc'
         s3 = boto3.client('s3')
@@ -245,7 +245,7 @@ class scrapper(Migration):
             #     print('value already exist so skipping')
             #     pass
             
-            #self.dump_raw_data_to_s3(raw_datas)
+            #self.dump_raw_data_to_s3(raw_datas,product_unik)
             # # dump each as a json file into an s3 bucket
             # bucket_name = 'aicorbuc'
             # s3 = boto3.client('s3')
