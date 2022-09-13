@@ -6,7 +6,6 @@ import pymysql
 from sqlalchemy import create_engine
 import psycopg2.extras as extras
 
-
 class Migration:
     def __init__(self):
         self.host = 'Localhost' 
