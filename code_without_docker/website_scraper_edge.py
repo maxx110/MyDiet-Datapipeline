@@ -21,7 +21,6 @@ from edge_connection import Migration
 from s3_function import s3_functions
 #from die import send
 
-
 class scrapper(Migration):
 
     def __init__(self):
