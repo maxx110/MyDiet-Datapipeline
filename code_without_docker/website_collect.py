@@ -27,7 +27,6 @@ from s3_function import s3_functions
 
 
 
-
 class scrapper(Migration):
 
     def __init__(self):
