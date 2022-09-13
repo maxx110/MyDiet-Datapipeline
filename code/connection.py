@@ -9,13 +9,13 @@ import psycopg2.extras as extras
 
 class Migration:
     def __init__(self):
-        self.host = 'Localhost' 
-        self.port = '5438'
-        self.user = 'max'
-        self.passwd = 'max1'
+        self.host = 'host.docker.internal' 
+        self.port = '5432'
+        self.user = 'postgres'
+        self.passwd = 'xxxx'
         self.database = 'postgres'
         self.conn = psycopg2.connect(host=self.host, dbname=self.database, user=self.user, password=self.passwd, port=self.port)
-        self.conn_string = "postgresql://postgres:max1@localhost/max"
+        self.conn_string = "postgresql://postgres:xxxx@host.docker.internal/postgres"
         
     def est_conn(self,data_frame):
         """
@@ -26,10 +26,10 @@ class Migration:
             conn = db.connect()
             conn1 = psycopg2.connect(
             database="postgres",
-            user='max', 
-            password='max1', 
-            host= 'Localhost',
-            port= '5438'
+            user='postgres', 
+            password='xxxx', 
+            host= 'host.docker.internal',
+            port= '5432'
             )
             conn1.autocommit = True
             cur = conn1.cursor()
@@ -44,10 +44,10 @@ class Migration:
         conn = db.connect()
         conn1 = psycopg2.connect(
         database="postgres",
-        user='max', 
-        password='max1', 
-        host= 'Localhost',    
-        port= '5438'
+        user='postgres', 
+        password='xxxx', 
+        host= 'host.docker.internal',    
+        port= '5432'
         
         )
         conn1.autocommit = True
@@ -121,6 +121,6 @@ class Migration:
             print(error)
     
 conne= Migration()
-conne.con_database()
+conne.create_schema()
     
     
