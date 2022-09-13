@@ -3,7 +3,8 @@ services:
   web_scrape:
     image: 0aefecfd6434
     stdin_open: True
-    tty: True
+    tty: True 
+    
     
  
 
