@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.chrome.options import Options
-from msedge.selenium_tools import EdgeOptions
+#from msedge.selenium_tools import EdgeOptions
 import uuid
 import json
 import urllib.request
@@ -29,6 +29,7 @@ from s3_function import s3_functions
 
 
 
+
 class scrapper(Migration):
 
     def __init__(self):
@@ -36,10 +37,13 @@ class scrapper(Migration):
         COptions = Options()
         COptions.use_chromium = True
         COptions.add_argument("--headless")
-        COptions.add_argument("disable-gpu")
+        COptions.add_argument("--disable-gpu")
+        COptions.add_argument("--disable-dev-shm-usage")
+        COptions.add_argument("--no-sandbox")
         COptions.add_argument('--allow-running-insecure-content')
         COptions.add_argument('--ignore-certificate-errors')
-        self.driver =webdriver.Chrome(executable_path="./chromedriver",options=COptions)
+        #COptions.binary_location = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+        self.driver =webdriver.Chrome(chrome_options=COptions)
         self.url = 'https://www.myprotein.com/'
         self.data = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [], \
         'Product_Link': [], 'Product_img': [],'Product_description': []}
@@ -74,13 +78,13 @@ class scrapper(Migration):
         locate_view_all.click()
 
     
-    # def convert_to_dataframe(self):
-    #     df = pd.DataFrame.from_dict(self.data, orient='index')
-    #     data_frame = df.transpose()
-    #     super().con_database()  #establish connecction to databse
-    #     super().create_schema() #creates a schema for database
-    #     super().create_table()  #creates a table if not exists
-    #     super().est_conn(data_frame) #loads dataframe to postgres database
+    def convert_to_dataframe(self):
+        # df = pd.DataFrame.from_dict(self.data, orient='index')
+        # data_frame = df.transpose()
+        super().con_database()  #establish connecction to databse
+        super().create_schema() #creates a schema for database
+        super().create_table()  #creates a table if not exists
+    #   super().est_conn(data_frame) #loads dataframe to postgres database
 
     def dump_raw_data_to_s3(self,raw_datas,product_unik):
         # dump each as a json file into an s3 bucket
@@ -174,12 +178,12 @@ class scrapper(Migration):
             product_title= products.find_element(By.XPATH, ".//h3[@class='athenaProductBlock_productName']").text
             
             #gets the product price but it checks for the xpath for both
-            """
+            
             try:
                 product_price = products.find_element(By.XPATH,".//span[@class='athenaProductBlock_fromValue']").text
             except:
                 product_price = products.find_element(By.XPATH,".//span[@class='athenaProductBlock_priceValue']").text
-            """
+            
             #gets the product links
             link = products.find_element(By.XPATH, ".//div[@class='athenaProductBlock']")
             a_tag = link.find_element(By.TAG_NAME,'a')
@@ -200,62 +204,56 @@ class scrapper(Migration):
             a_tag = img.find_element(By.TAG_NAME,'img')
             product_img = a_tag.get_attribute('src')
             
-            # #gets the product description
-            # try:
-            #     product_text= products.find_element(By.XPATH, ".//span[@class='papBanner_text']").text           
-            # except:
-            #     pass
+            #gets the product description
+            try:
+                product_text= products.find_element(By.XPATH, ".//span[@class='papBanner_text']").text           
+            except:
+                pass
             
             raw_datas = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [], \
             'Product_Link': [], 'Product_img': [],'Product_description': []}
-            #self.avoid_rescrap(product_unik)
-            #if status == False:
+            self.avoid_rescrap(product_unik)
+            
             # APPEND VARIOUS RETRIEVAL TO ITS RESPECTIVE DICTIONARY
             self.data['Unique_Id'].append(UniqueId)
             self.data['Product_Id'].append(product_unik)
             self.data['Product_Name'].append(product_title)
-            #self.data['Product_Price'].append(product_price)
+            self.data['Product_Price'].append(product_price)
             self.data['Product_Link'].append(product_link)
             self.data['Product_img'].append(product_img)
-            # self.data['Product_description'].append(product_text)
+            self.data['Product_description'].append(product_text)
 
             raw_datas['Unique_Id'].append(UniqueId)
             raw_datas['Product_Id'].append(product_unik)
             raw_datas['Product_Name'].append(product_title)
-            # #raw_datas['Product_Price'].append(product_price)
+            raw_datas['Product_Price'].append(product_price)
             raw_datas['Product_Link'].append(product_link)
             raw_datas['Product_img'].append(product_img)
-            # #raw_datas['Product_description'].append(product_text)
+            raw_datas['Product_description'].append(product_text)
             
-            #ths insert the data into the database if it doesn't already exist
-            #super().insert_into_database_noduplicate(product_unik,product_title,product_link,product_img)
+            #this insert the data into the database if it doesn't already exist
+            super().insert_into_database_noduplicate(product_unik,product_title,product_link,product_img)
 
-            # folder_product_unik = str(product_unik)
+            folder_product_unik = str(product_unik)
 
-            # self.avoid_rescrap(folder_product_unik)
-            # if self.rescrape_tag == False:
-            #     #create a folder path and name for each product
-            #     product_unik_path = f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\{product_unik}'
-            #     make_folder(product_unik_path)
-            #     os.chdir(product_unik_path)
-            #     # dump each as json file with data.json as file name
-            #     with open('data.json', 'a') as f:
-            #         json.dump(raw_datas, f)
-            # else:
-            #     print('value already exist so skipping')
-            #     pass
+            self.avoid_rescrap(folder_product_unik)
+            if self.rescrape_tag == False:
+                #create a folder path and name for each product
+                product_unik_path = f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\{product_unik}'
+                make_folder(product_unik_path)
+                os.chdir(product_unik_path)
+                # dump each as json file with data.json as file name
+                with open('data.json', 'a') as f:
+                    json.dump(raw_datas, f)
+            else:
+                print('value already exist so skipping')
+                pass
             
-            #self.dump_raw_data_to_s3(raw_datas,product_unik)
-            # # dump each as a json file into an s3 bucket
-            # bucket_name = 'aicorbuc'
-            # s3 = boto3.client('s3')
-            # data = json.dumps(raw_datas)
-            # s3.put_object(Body=json.dumps(data),Bucket=bucket_name,Key= f'website_data/{product_unik}')
-
-           #raw_datas.clear()
-            # else:
-            #     pass
+            # save data into s3 bucket
+            self.dump_raw_data_to_s3(raw_datas,product_unik)
             
+            raw_datas.clear()
+           
 
   
 
@@ -269,14 +267,13 @@ class scrapper(Migration):
         # self.click_on_view_all()
         self.scroll_down_to_last_page()
         self.driver.implicitly_wait(20)
-        # sleep(5)
+        self.convert_to_dataframe()
+        sleep(3)
         self.get_all_product()
-        #print(self.data)
-        # sleep(5)
-        #self.download_img()
-        #self.convert_to_dataframe()
-        #s3_functions.download_image_locally(self)
-        # sleep(5)
+        sleep(3)
+        self.download_img()
+        sleep(3)
+
        
         
 

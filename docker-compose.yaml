@@ -1,23 +1,12 @@
-version: '3'
+version: '2'
 services:
-  database:
-    image: 'postgres:latest'
-    ports: 
-      - 5432:5432
-    restart: always
-    environment:
-      POSTGRES_USER: max
-      POSTGRES_PASSWORD: max1
-      POSTGRES_DB: postgres
-
-  # web_scrape:
-  #   image: 8eb23ce5b731
-  #   restart: always
-  #   ports:
-  #     - 8080:8080
-  #   depends_on:
-  #     - database
+  web_scrape:
+    image: 0aefecfd6434
+    stdin_open: True
+    tty: True
+    
+ 
 
     
-
+ 
     
