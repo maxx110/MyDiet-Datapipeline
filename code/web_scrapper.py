@@ -8,6 +8,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 #from msedge.selenium_tools import EdgeOptions
 import uuid
 import json
@@ -31,7 +33,7 @@ class scrapper(Migration):
 
     def __init__(self):
         super().__init__()
-        COptions = Options()
+        COptions = webdriver.ChromeOptions()
         COptions.use_chromium = True
         COptions.add_argument("--headless")
         COptions.add_argument("--disable-gpu")
@@ -40,7 +42,8 @@ class scrapper(Migration):
         COptions.add_argument('--allow-running-insecure-content')
         COptions.add_argument('--ignore-certificate-errors')
         #COptions.binary_location = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-        self.driver =webdriver.Chrome(chrome_options=COptions)
+        s= Service(ChromeDriverManager().install())
+        self.driver =webdriver.Chrome(service=s, options=COptions)
         self.url = 'https://www.myprotein.com/'
         self.data = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [], \
         'Product_Link': [], 'Product_img': [],'Product_description': []}
@@ -99,7 +102,7 @@ class scrapper(Migration):
         try:
             s3= boto3.client('s3')
             bucket_name = 'aicorbuc'
-            files_in_image_folder = glob.glob('C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images\\*')
+            files_in_image_folder = glob.glob('C:\\Users\\maxwe\\Desktop\\web-scraper\\MyDiet-Datapipeline\\code\\raw_data\\images\\*')
             
             for file in files_in_image_folder:
                 file_name = file.split('-')[-1]
@@ -108,7 +111,7 @@ class scrapper(Migration):
             print('image upload to s3 failed')
 
     def avoid_rescrap(self,prd_unik):    
-        raw_folder_path = 'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data'
+        raw_folder_path = 'C:\\Users\\maxwe\\Desktop\\web-scraper\\MyDiet-Datapipeline\\code\\raw_data'
         for root_folder,sub_folder,files in os.walk(raw_folder_path):
             for file in files:
                 if file == prd_unik:
@@ -127,7 +130,7 @@ class scrapper(Migration):
         """
         download the image from the src from the web
         """
-        image_path = 'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images'    
+        image_path = 'C:\\Users\\maxwe\\Desktop\\web-scraper\\MyDiet-Datapipeline\\code\\raw_data\\images'    
         #make a folder to the image path
         make_folder(image_path)
         
@@ -150,9 +153,9 @@ class scrapper(Migration):
                     #print(prd_img)
                     img_name = prd_img.split('/')[-1]
                     try:
-                        urllib.request.urlretrieve(prd_img, f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images\\{img_name}.jpg')
+                        urllib.request.urlretrieve(prd_img, f'C:\\Users\\maxwe\\Desktop\\web-scraper\\MyDiet-Datapipeline\\code\\raw_data\\images\\{img_name}.jpg')
                     except:
-                        urllib.request.urlretrieve(prd_img, f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\images\\{img_name}.png')
+                        urllib.request.urlretrieve(prd_img, f'C:\\Users\\maxwe\\Desktop\\web-scraper\\MyDiet-Datapipeline\\code\\raw_data\\images\\{img_name}.png')
                     # upload images into s3 bucket
                 if answer == 'yes':
                     self.uploadDirectory()
@@ -229,14 +232,14 @@ class scrapper(Migration):
             raw_datas['Product_description'].append(product_text)
             
             #this insert the data into the database if it doesn't already exist
-            super().insert_into_database_noduplicate(product_unik,product_title,product_link,product_img)
+            super().insert_into_database_noduplicate(UniqueId,product_unik,product_title,product_price,product_link,product_img,product_text)
 
             folder_product_unik = str(product_unik)
 
             self.avoid_rescrap(folder_product_unik)
             if self.rescrape_tag == False:
                 #create a folder path and name for each product
-                product_unik_path = f'C:\\Users\\Maud\\Desktop\\python\\data_pipelines\\data_pipeline\\Scripts\\raw_data\\{product_unik}'
+                product_unik_path = f'C:\\Users\\maxwe\\Desktop\\web-scraper\\MyDiet-Datapipeline\\code\\raw_data\\{product_unik}'
                 make_folder(product_unik_path)
                 os.chdir(product_unik_path)
                 # dump each as json file with data.json as file name
@@ -263,6 +266,7 @@ class scrapper(Migration):
         self.click_on_vitamins()
         # self.click_on_view_all()
         self.scroll_down_to_last_page()
+        print(self.data)
         self.driver.implicitly_wait(20)
         self.convert_to_dataframe()
         sleep(3)
@@ -281,7 +285,7 @@ class scrapper(Migration):
 
 
 if __name__ == '__main__':
-    path = 'raw_data'
+    path = 'C:\\Users\\maxwe\\Desktop\\web-scraper\\MyDiet-Datapipeline\\code\\raw_data'
     def make_folder(path):
         if not os.path.exists(path):
             os.makedirs(path)
