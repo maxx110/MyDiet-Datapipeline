@@ -9,14 +9,14 @@ import psycopg2.extras as extras
 
 class Migration:
     def __init__(self):
-        self.host = 'Localhost'
+        self.host = 'aicoredb.cv6rfskqe02s.us-east-1.rds.amazonaws.com'
         self.port = '5432'
         self.user = 'postgres'
-        self.passwd = 'xxxx'
+        self.passwd = 'Hamish1234'
         self.database = 'postgres'
         self.conn = psycopg2.connect(
             host=self.host, dbname=self.database, user=self.user, password=self.passwd, port=self.port)
-        self.conn_string = "postgresql://postgres:xxxx@Localhost/postgres"
+        self.conn_string = "postgresql://postgres:Hamish1234@aicoredb.cv6rfskqe02s.us-east-1.rds.amazonaws.com/postgres"
 
     def est_conn(self, data_frame):
         """
@@ -28,8 +28,8 @@ class Migration:
             conn1 = psycopg2.connect(
                 database="postgres",
                 user='postgres',
-                password='xxxx',
-                host='Localhost',
+                password='Hamish1234',
+                host='aicoredb.cv6rfskqe02s.us-east-1.rds.amazonaws.com',
                 port='5432'
             )
             conn1.autocommit = True
@@ -101,8 +101,8 @@ class Migration:
         conn1 = psycopg2.connect(
             database="postgres",
             user='postgres',
-            password='xxxx',
-            host='Localhost',
+            password='Hamish1234',
+            host='aicoredb.cv6rfskqe02s.us-east-1.rds.amazonaws.com',
             port='5432'
 
         )
