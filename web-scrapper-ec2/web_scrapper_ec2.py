@@ -241,7 +241,7 @@ class scrapper(Migration):
                 with open('data.json', 'a') as f:
                     json.dump(raw_datas, f)
             else:
-                print('value already exist so skipping')
+                print('value already exists so skipping')
                 pass
 
             # save data into s3 bucket
