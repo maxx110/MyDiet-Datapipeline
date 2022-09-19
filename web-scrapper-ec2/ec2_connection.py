@@ -76,7 +76,7 @@ class Migration:
             # cur.close()
 
         except:
-            print('table not created successfully')
+            print('table is not created successfully')
 
     def query_schema(self):
         cur = self.conn.cursor()
