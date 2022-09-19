@@ -41,9 +41,11 @@ class scrapper(Migration):
         COptions.add_argument("--no-sandbox")
         COptions.add_argument('--allow-running-insecure-content')
         COptions.add_argument('--ignore-certificate-errors')
+        COptions.add_argument('window-size=1920x1480')
         #COptions.binary_location = "C:\Program Files\Google\Chrome\Application\chrome.exe"
         s= Service(ChromeDriverManager().install())
         self.driver =webdriver.Chrome(service=s, options=COptions)
+        #self.driver = webdriver.Chrome()
         self.url = 'https://www.myprotein.com/'
         self.data = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [], \
         'Product_Link': [], 'Product_img': [],'Product_description': []}
@@ -74,7 +76,7 @@ class scrapper(Migration):
         sleep(1)
 
     def click_on_view_all(self):
-        locate_view_all = self.driver.find_element(By.XPATH,"//a[normalize-space()='View all']")
+        locate_view_all = self.driver.find_element(By.XPATH,"//*[@id='mainContent']/div[3]/div[1]/a")
         locate_view_all.click()
 
     
@@ -169,16 +171,17 @@ class scrapper(Migration):
         """
         scrape all required data from the site
         """
+        all_product = self.driver.find_elements(By.XPATH, "(//li[contains(@class,'productListProducts_product')])")
         
-        all_product = self.driver.find_elements(by=By.XPATH, value="(//li[contains(@class,'productListProducts_product')])")
-        
+            
         for products in all_product:
+            
             status = False
             #gets the product title and return only the text
             product_title= products.find_element(By.XPATH, ".//h3[@class='athenaProductBlock_productName']").text
             
-            #gets the product price but it checks for the xpath for both
             
+            #gets the product price but it checks for the xpath for both
             try:
                 product_price = products.find_element(By.XPATH,".//span[@class='athenaProductBlock_fromValue']").text
             except:
@@ -212,7 +215,7 @@ class scrapper(Migration):
             
             raw_datas = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [], \
             'Product_Link': [], 'Product_img': [],'Product_description': []}
-            self.avoid_rescrap(product_unik)
+            # self.avoid_rescrap(product_unik)
             
             # APPEND VARIOUS RETRIEVAL TO ITS RESPECTIVE DICTIONARY
             self.data['Unique_Id'].append(UniqueId)
@@ -264,13 +267,13 @@ class scrapper(Migration):
         self.accept_cookies()
         self.driver.implicitly_wait(20)
         self.click_on_vitamins()
-        # self.click_on_view_all()
+        self.click_on_view_all()
         self.scroll_down_to_last_page()
-        print(self.data)
         self.driver.implicitly_wait(20)
         self.convert_to_dataframe()
         sleep(3)
         self.get_all_product()
+        print(self.data)
         sleep(3)
         self.download_img()
         sleep(3)
