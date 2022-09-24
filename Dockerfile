@@ -17,6 +17,6 @@ RUN pip install -r requirements.txt
 # copy files in my local machine to docker
 
 #run entry point
-#ENTRYPOINT ["python3","/app/code/web_scrapper.py"]
-CMD ["python3","/app/code/web_scrapper.py"]
+#ENTRYPOINT ["python3","/app/web-scrapper-ec2/web_scrapper_ec2.py"]
+CMD ["python3","/app/web-scrapper-ec2/web_scrapper_ec2.py"]
 
