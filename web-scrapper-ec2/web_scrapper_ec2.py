@@ -42,8 +42,9 @@ class scrapper(Migration):
         s = Service(ChromeDriverManager().install())
         self.driver = webdriver.Chrome(service=s, options=COptions)
         self.url = 'https://www.myprotein.com/'
-        self.data = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [],'Product_Link': [], 'Product_img': [], 'Product_description': []}
-                     
+        self.data = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [
+        ], 'Product_Link': [], 'Product_img': [], 'Product_description': []}
+
         self.img = []
         self.rescrape_tag = False
 
@@ -54,25 +55,30 @@ class scrapper(Migration):
 
     def accept_cookies(self):
         try:
-            accept_cook = self.driver.find_element(By.XPATH, '//*[@id="home"]/div[4]/div/div[2]/button')    
+            accept_cook = self.driver.find_element(
+                By.XPATH, '//*[@id="home"]/div[4]/div/div[2]/button')
             accept_cook.click()
-            accept_cookies = self.driver.find_element(By.XPATH, "//*[@id='home']/div[1]/div/div/div[2]/button")       
+            accept_cookies = self.driver.find_element(
+                By.XPATH, "//*[@id='home']/div[1]/div/div/div[2]/button")
             accept_cookies.click()
         except:
             print('something is wrong')
 
     def click_on_vitamins(self):
-        locate_vitamins = self.driver.find_element(By.XPATH, "//*[@id='mainContent']/div[2]/a[4]")
-            
+        locate_vitamins = self.driver.find_element(
+            By.XPATH, "//*[@id='mainContent']/div[2]/a[4]")
         locate_vitamins.click()
 
     def scroll_down_to_last_page(self):
-        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")    
+        self.driver.execute_script(
+            "window.scrollTo(0, document.body.scrollHeight);")
         sleep(1)
 
     def click_on_view_all(self):
-        locate_view_all = self.driver.find_element(By.XPATH,"//*[@id='mainContent']/div[3]/div[1]/a")
-        locate_view_all.click()
+        # locate_view_all = self.driver.find_element(By.LINK_TEXT,"View all")
+        # self.driver.execute_script("arguments[0].click();",locate_view_all)
+        Wait(self.driver, 20).until(EC.element_to_be_clickable(
+            (By.XPATH, "//*[@id='mainContent']/div[3]/div[1]/a"))).click()
 
     def convert_to_dataframe(self):
         # df = pd.DataFrame.from_dict(self.data, orient='index')
@@ -88,11 +94,10 @@ class scrapper(Migration):
         s3 = boto3.client('s3')
         data = json.dumps(raw_datas)
         s3.put_object(Body=json.dumps(data), Bucket=bucket_name, Key=f'website_data/{product_unik}')
-                     
 
     def uploadDirectory(self):
         """
-        upload the downloaded image into the required s3_bucket 
+        upload the downloaded image into the required s3_bucket
         """
         try:
             s3 = boto3.client('s3')
@@ -102,7 +107,7 @@ class scrapper(Migration):
             for file in files_in_image_folder:
                 file_name = file.split('-')[-1]
                 s3.upload_file(file, bucket_name,f'website_data/images/{file_name}')
-                               
+
         except:
             print('image upload to s3 failed')
 
@@ -126,8 +131,9 @@ class scrapper(Migration):
         make_folder(image_path)
 
         # get all images
-        product_lists = self.driver.find_elements(by=By.XPATH, value="//li[contains(@class,'productListProducts_product')]")
-            
+        product_lists = self.driver.find_elements(
+            by=By.XPATH, value="//li[contains(@class,'productListProducts_product')]")
+
         bucket_name = 'aicorbuc'
         s3 = boto3.client('s3')
         answer = input('Do you want to upload to s3: Yes/No')
@@ -136,8 +142,9 @@ class scrapper(Migration):
 
                 if not os.path.exists(image_path):
                     os.makedirs(image_path)
-                img = product.find_element(By.XPATH, ".//div[@class='athenaProductBlock_imageContainer']")
-                    
+                img = product.find_element(
+                    By.XPATH, ".//div[@class='athenaProductBlock_imageContainer']")
+
                 a_tags = img.find_elements(By.TAG_NAME, 'img')
                 # print(a_tag)
                 for each_a_tag in a_tags:
@@ -145,11 +152,13 @@ class scrapper(Migration):
                     # print(prd_img)
                     img_name = prd_img.split('/')[-1]
                     try:
-                        urllib.request.urlretrieve(prd_img, f'raw_data\\images\\{img_name}.jpg')
-                            
+                        urllib.request.urlretrieve(
+                            prd_img, f'raw_data\\images\\{img_name}.jpg')
+
                     except:
-                        urllib.request.urlretrieve(prd_img, f'raw_data\\images\\{img_name}.png')
-                            
+                        urllib.request.urlretrieve(
+                            prd_img, f'raw_data\\images\\{img_name}.png')
+
                     # upload images into s3 bucket
                 if answer == 'yes':
                     self.uploadDirectory()
@@ -163,28 +172,33 @@ class scrapper(Migration):
         scrape all required data from the site
         """
 
-        all_product = self.driver.find_elements(By.XPATH, "(//li[contains(@class,'productListProducts_product')])")
-        # print(all_product)    
+        all_product = self.driver.find_elements(
+            By.XPATH, "(//li[contains(@class,'productListProducts_product')])")
+        # print(all_product)
 
         for products in all_product:
             status = False
             # gets the product title and return only the text
-            product_title = products.find_element(By.XPATH, ".//h3[@class='athenaProductBlock_productName']").text
-            print(product_title)
+            product_title = products.find_element(
+                By.XPATH, ".//h3[@class='athenaProductBlock_productName']").text
+
             # gets the product price but it checks for the xpath for both
             try:
-                product_price = products.find_element(By.XPATH, ".//span[@class='athenaProductBlock_fromValue']").text
+                product_price = products.find_element(
+                    By.XPATH, ".//span[@class='athenaProductBlock_fromValue']").text
             except:
-                product_price = products.find_element(By.XPATH, ".//span[@class='athenaProductBlock_priceValue']").text
+                product_price = products.find_element(
+                    By.XPATH, ".//span[@class='athenaProductBlock_priceValue']").text
 
-                    
             # gets the product links
-            link = products.find_element(By.XPATH, ".//div[@class='athenaProductBlock']")                
+            link = products.find_element(
+                By.XPATH, ".//div[@class='athenaProductBlock']")
             a_tag = link.find_element(By.TAG_NAME, 'a')
             product_link = a_tag.get_attribute('href')
 
             # get product unique id
-            unik = products.find_element(By.XPATH, ".//div[@class='athenaProductBlock_title']")
+            unik = products.find_element(
+                By.XPATH, ".//div[@class='athenaProductBlock_title']")
             a_tag = unik.find_element(By.TAG_NAME, 'h3')
             product_unikk = a_tag.get_attribute('id').split('-')
             product_unik = product_unikk[1]
@@ -194,19 +208,22 @@ class scrapper(Migration):
             UniqueId = str(UniqueIds)
 
             # gets the product image
-            img = products.find_element(By.XPATH, ".//div[@class='athenaProductBlock_imageContainer']")
+            img = products.find_element(
+                By.XPATH, ".//div[@class='athenaProductBlock_imageContainer']")
             a_tag = img.find_element(By.TAG_NAME, 'img')
             product_img = a_tag.get_attribute('src')
 
             # gets the product description
             try:
-                product_text = products.find_element(By.XPATH, ".//span[@class='papBanner_text']").text
+                product_text = products.find_element(
+                    By.XPATH, ".//span[@class='papBanner_text']").text
             except:
                 pass
 
-            raw_datas = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [], 'Product_Link': [], 'Product_img': [], 'Product_description': []}
-            
-            #self.avoid_rescrap(product_unik)
+            raw_datas = {'Unique_Id': [], 'Product_Id': [], 'Product_Name': [], 'Product_Price': [
+            ], 'Product_Link': [], 'Product_img': [], 'Product_description': []}
+
+            # self.avoid_rescrap(product_unik)
 
             # APPEND VARIOUS RETRIEVAL TO ITS RESPECTIVE DICTIONARY
             self.data['Unique_Id'].append(UniqueId)
@@ -226,9 +243,9 @@ class scrapper(Migration):
             raw_datas['Product_description'].append(product_text)
 
             # this insert the data into the database if it doesn't already exist
-            super().insert_into_database_noduplicate(UniqueId, product_unik, product_title, product_price, product_link, product_img, product_text)
+            super().insert_into_database_noduplicate(UniqueId, product_unik,
+                                                     product_title, product_price, product_link, product_img, product_text)
 
-                                                    
             folder_product_unik = str(product_unik)
 
             self.avoid_rescrap(folder_product_unik)
@@ -246,7 +263,6 @@ class scrapper(Migration):
 
             # save data into s3 bucket
             self.dump_raw_data_to_s3(raw_datas,product_unik)
-
             raw_datas.clear()
 
     def test(self):
@@ -262,12 +278,11 @@ class scrapper(Migration):
         self.convert_to_dataframe()
         sleep(3)
         self.get_all_product()
-        print(self.data)
         sleep(3)
         self.download_img()
         sleep(3)
 
- 
+
 if __name__ == '__main__':
     path = 'raw_data'
 
