@@ -12,11 +12,11 @@ class Migration:
         self.host = 'aicoredb.cv6rfskqe02s.us-east-1.rds.amazonaws.com'
         self.port = '5432'
         self.user = 'postgres'
-        self.passwd = 'Hamish1234'
+        self.passwd = 'xxxx'
         self.database = 'postgres'
         self.conn = psycopg2.connect(
             host=self.host, dbname=self.database, user=self.user, password=self.passwd, port=self.port)
-        self.conn_string = "postgresql://postgres:Hamish1234@aicoredb.cv6rfskqe02s.us-east-1.rds.amazonaws.com/postgres"
+        self.conn_string = "postgresql://postgres:xxxx@aicoredb.cv6rfskqe02s.us-east-1.rds.amazonaws.com/postgres"
 
     def est_conn(self, data_frame):
         """
@@ -28,7 +28,7 @@ class Migration:
             conn1 = psycopg2.connect(
                 database="postgres",
                 user='postgres',
-                password='Hamish1234',
+                password='xxxx',
                 host='aicoredb.cv6rfskqe02s.us-east-1.rds.amazonaws.com',
                 port='5432'
             )
@@ -102,7 +102,7 @@ class Migration:
         conn1 = psycopg2.connect(
             database="postgres",
             user='postgres',
-            password='Hamish1234',
+            password='xxxx',
             host='aicoredb.cv6rfskqe02s.us-east-1.rds.amazonaws.com',
             port='5432'
 
