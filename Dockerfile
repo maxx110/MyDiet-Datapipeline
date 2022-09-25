@@ -18,5 +18,5 @@ RUN pip install -r requirements.txt
 
 #run entry point
 #ENTRYPOINT ["python3","/app/web-scrapper-ec2/web_scrapper_ec2.py"]
-CMD ["python3","/app/web-scrapper-ec2/web_scrapper_ec2.py"]
+CMD ["python3","/app/web-scrapper-ec2/web_scrape_ec2.py"]
 
