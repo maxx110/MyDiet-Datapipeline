@@ -11,7 +11,7 @@ RUN apt-get install -yqq unzip
 RUN unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
 WORKDIR /app
 
-#copy and install python dependencies
+#copy and install python all dependencies
 COPY . .
 RUN pip install -r requirements.txt
 # copy files in my local machine to docker
